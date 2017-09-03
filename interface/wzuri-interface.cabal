@@ -1,0 +1,14 @@
+name: wzuri-interface
+version: 1.0.0
+license: MIT
+cabal-version: >= 1.18
+build-type: Simple
+
+library
+    build-depends:
+          base < 5
+        , aeson
+        , servant
+        , text
+    exposed-modules: Types
+    default-language: Haskell2010

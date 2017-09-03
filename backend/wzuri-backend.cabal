@@ -1,0 +1,16 @@
+name: wzuri-backend
+version: 1.0.0
+license: MIT
+cabal-version: >= 1.18
+build-type: Simple
+
+executable wzuri-backend
+    build-depends:
+          base < 5
+        , aeson
+        , wzuri-interface
+        , servant-server
+        , wai
+        , warp
+    main-is: Main.hs
+    default-language: Haskell2010

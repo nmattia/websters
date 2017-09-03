@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: "Courier New", Courier, monospace; font-size: smaller; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# A Fully Functional Webapp
+## WebZuri, 5th of September 2017
+## Nicolas Mattia
+
+---
+
+# Agenda
+
+1. Introduction
+  - Functional Programming
+  - From Ruby to Haskell
+1. A Fully Functional Webapp
+  - API as Types
+  - Serving an API
+  - Create a frontend with FRP
+  - Build and Deploy with Nix
+1. Cool FP benefits
+  - inline other languages
+  - performance with linear types
+  - Drawbacks
+---
+
+## Introduction - Functional Programming 1/2
+
+![Functional Programming word cloud](./wordcloud.png)
+
+---
+
+## Introduction - Functional Programming 1/2
+
+* What's that FP thing?
+  - Computation == mathematical function evaluation, mapping input to output
+  - Focus on immutability, reproducibility
+  - Origins in Lambda Calculus (1930s)
+* Have you heard of FP?
+  - Clojure
+  - Erlang/Elixir
+  - Haskell
+  - Lisp
+  - Scala
+---
+
+## Introduction - From Ruby to Haskell
+
+* Blown away at ZuriHac; didn't understand a thing
+
+![ZuriHac 2017](./zurihac.png)
+
+* Interviewed for Ruby job, got Haskell job
+* Now working with Tweag I/O, R&D lab in Paris
+
+![Tweag I/O](./logo-tweag.png)
+
+* Apply functional programming for HPC, distributed systems, SaaS, data processing
+
+![Pfizer](./pfizer.png)
+![Seagate](./seagate.png)
+![Sage](./sage.png)
+
+---
+
+## A Fully Functional Webapp - API as Types
+
+``` haskell
+-- interface/Types.hs
+type WebstersAPI =
+  "websters" :> Get '[JSON] [Webster] :<|>
+  "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
+
+data Webster = Webster
+  { name :: Text
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON Webster
+instance FromJSON Webster
+```
+
+---
+
+## A Fully Functional Webapp - Serving an API 1/2
+
+``` haskell
+-- interface/Types.hs
+type WebstersAPI =
+  "websters" :> Get '[JSON] [Webster] :<|>
+  "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
+```
+
+``` haskell
+-- backend/Main.hs
+main :: IO ()
+-- Function body
+main = do
+  -- read CLI arguments
+  [webappPath] <- getArgs
+
+  -- create a reference containing an empty list ([])
+  websters <- newIORef []
+
+  -- run our webapp "webstersApp" (see next slide)
+  run 8081 (webstersApp websters webappPath)
+```
+
+???
+
+* Main read arg
+* Main create empty (list) ref
+* Boot webapp
+
+---
+
+## A Fully Functional Webapp - Serving an API 2/2
+
+``` haskell
+-- interface/Types.hs
+type WebstersAPI =
+  "websters" :> Get '[JSON] [Webster] :<|>
+  "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
+```
+
+``` haskell
+-- backend/Main.hs
+
+-- ┌ Function name       Function return type ┐
+-- │                                          │
+-- │           ┌ Function arguments types     │
+-- │           │                  │           │
+webstersApp :: IORef [Webster] -> FilePath -> Application
+--          ┌────────┬ Function arguments
+--          │        │                     Serve the assets ┐
+webstersApp websters path = --                       ┌──────┴──────────┐
+    serve (Proxy :: Proxy MyApi) (serveWebsters :<|> serveDirectory path)
+  where -- local definitions
+    serveWebsters = webstersGet :<|> webstersPost
+    webstersGet = liftIO $ readIORef websters -- GET /websters
+    webstersPost newWebster = liftIO $ do -- POST /websters
+      modifyIORef websters (newWebster:)
+      readIORef websters  --          └ Insert in list
+```
+
+---
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create(
+        {
+          highlightLines: true
+        });
+    </script>
+  </body>
+</html>

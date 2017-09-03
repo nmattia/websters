@@ -1,0 +1,19 @@
+name: wzuri-frontend
+version: 1.0.0
+license: MIT
+cabal-version: >= 1.18
+build-type: Simple
+
+executable wzuri-frontend
+    build-depends:
+          base < 5
+        , bytestring
+        , data-default
+        , reflex
+        , reflex-dom
+        , servant
+        , servant-reflex
+        , text
+        , wzuri-interface
+    main-is: Main.hs
+    default-language: Haskell2010
