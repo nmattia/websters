@@ -149,6 +149,7 @@ type WebstersAPI =
 -- │           ┌ Function arguments types     │
 -- │           │                  │           │
 webstersApp :: IORef [Webster] -> FilePath -> Application
+--
 --          ┌────────┬ Function arguments
 --          │        │                     Serve the assets ┐
 webstersApp websters path = --                       ┌──────┴──────────┐
