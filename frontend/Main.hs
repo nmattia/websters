@@ -11,7 +11,6 @@ import Reflex.Dom
 import Servant.API
 import Servant.Reflex
 import Types
-import qualified Data.Text as Text
 
 main :: IO ()
 main = mainWidget webstersWidget
