@@ -17,24 +17,28 @@ main = mainWidget webstersWidget
 
 webstersWidget :: forall t m. (MonadWidget t m, Reflex t) => m ()
 webstersWidget = do
-    getResponse <- webstersGet =<< button "refresh"
+--
+--  Attach a button to trigger a GET ─┐
+--                        ────────────┴───────────────
+    webstersGetTrigger <- webstersGet =<< button "refresh"
 
-    t <- textInput def
-
-    postResponse <- webstersPost
-      ((Right . Webster) <$> _textInput_value t)
-      (keypress Enter t)
+    newWebsterInput <- textInput def -- ─────┐
+--                                Same with a text input for POST
+    webstersPostTrigger <- webstersPost -- ─────┴┐
+      ((Right . Webster) <$> _textInput_value newWebsterInput)
+      (keypress Enter newWebsterInput)
 
     websters <- holdDyn [] $ fmapMaybe reqSuccess $ leftmost
-      [ getResponse
-      , postResponse
-      ]
+      [ webstersGetTrigger --  Define "websters", our list of "Webster"s,
+      , webstersPostTrigger -- which is the latest result from either a
+      ] --                     GET or a POST
 
+    -- Basically a for-each
     void $ simpleList websters $ \webster ->
       el "p" $ dynText (name <$> webster)
   where
-    webstersGet :<|> webstersPost = client
-      (Proxy :: Proxy WebstersAPI)
-      (Proxy :: Proxy m)
-      (Proxy :: Proxy ())
+    webstersGet :<|> webstersPost = client -- ┐
+      (Proxy :: Proxy WebstersAPI) -- ────────┤
+      (Proxy :: Proxy m) --  Function that derives query functions
+      (Proxy :: Proxy ()) --       (statically, at compile time)
       (constDyn (BasePath "/"))

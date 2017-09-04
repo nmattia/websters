@@ -13,22 +13,31 @@ import Types
 
 type MyApi = WebstersAPI :<|> Raw
 
-myAPI :: Proxy MyApi
-myAPI = Proxy
-
 main :: IO ()
+-- Function body
 main = do
+  -- read CLI arguments
   [webappPath] <- getArgs
-  users <- newIORef []
-  run 8081 (webstersApp webappPath users)
 
-webstersApp :: FilePath -> IORef [Webster] -> Application
-webstersApp webappPath users =
-    serve (Proxy :: Proxy MyApi) (serveApi :<|> serveWebapp)
+  -- create a reference containing an empty list ([])
+  websters <- newIORef []
+
+  -- run our webapp "webstersApp" (see next slide)
+  run 8081 (webstersApp websters webappPath)
+
+-- ┌ Function name       Function return type ┐
+-- │                                          │
+-- │           ┌ Function arguments types     │
+-- │           │                  │           │
+webstersApp :: IORef [Webster] -> FilePath -> Application
+--
+--          ┌────────┬ Function arguments
+--          │        │                     Serve the assets ┐
+webstersApp websters path = --                       ┌──────┴──────────┐
+    serve (Proxy :: Proxy MyApi) (serveWebsters :<|> serveDirectory path)
   where
-    serveApi = webstersGet :<|> webstersPost
-    webstersGet = liftIO $ readIORef users
-    webstersPost newWebster = liftIO $ do
-      modifyIORef users (newWebster:)
-      readIORef users
-    serveWebapp = serveDirectory webappPath
+    serveWebsters = webstersGet :<|> webstersPost
+    webstersGet = liftIO $ readIORef websters -- GET /websters
+    webstersPost newWebster = liftIO $ do -- POST /websters
+      modifyIORef websters (newWebster:)
+      readIORef websters  --          └ Insert in list

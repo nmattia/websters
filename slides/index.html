@@ -4,11 +4,16 @@
     <title>Title</title>
     <meta charset="utf-8">
     <style>
-      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
-      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
-      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+      @font-face{
+        font-family: 'Yanone Kaffeesatz';
+        src: url('YanoneKaffeesatz-Regular.ttf');
+      }
+      @font-face{
+        font-family: 'Open Sans';
+        src: url('OpenSans-Regular.ttf');
+      }
 
-      body { font-family: 'Droid Serif'; }
+      body { font-family: 'Open Sans'; }
       h1, h2, h3 {
         font-family: 'Yanone Kaffeesatz';
         font-weight: normal;
@@ -35,12 +40,11 @@ class: center, middle
 1. A Fully Functional Webapp
   - API as Types
   - Serving an API
-  - Create a frontend with FRP
+  - FRP frontend
   - Build and Deploy with Nix
-1. Cool FP benefits
-  - inline other languages
-  - performance with linear types
-  - Drawbacks
+1. Starting easy
+  - One function at a time
+  - Read the doc
 ---
 
 ## Introduction - Functional Programming 1/2
@@ -52,7 +56,7 @@ class: center, middle
 ## Introduction - Functional Programming 1/2
 
 * What's that FP thing?
-  - Computation == mathematical function evaluation, mapping input to output
+  - Computation => mathematical function evaluation, mapping input to output
   - Focus on immutability, reproducibility
   - Origins in Lambda Calculus (1930s)
 * Have you heard of FP?
@@ -60,7 +64,15 @@ class: center, middle
   - Erlang/Elixir
   - Haskell
   - Lisp
+  - OCaml
   - Scala
+  - ...
+
+???
+
+* https://en.wikipedia.org/wiki/Functional_programming
+* https://en.wikipedia.org/wiki/Lambda_calculus
+
 ---
 
 ## Introduction - From Ruby to Haskell
@@ -80,6 +92,11 @@ class: center, middle
 ![Seagate](./seagate.png)
 ![Sage](./sage.png)
 
+???
+
+* https://zurihac.info/
+* http://www.tweag.io/
+
 ---
 
 ## A Fully Functional Webapp - API as Types
@@ -87,17 +104,47 @@ class: center, middle
 ``` haskell
 -- interface/Types.hs
 type WebstersAPI =
+  -- GET /websters
+  -- returns a list of "Webster"s
   "websters" :> Get '[JSON] [Webster] :<|>
+  -- POST /websters
+  -- inserts a "Webster" and returns a list of "Webster"s
   "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
 
+-- | The datastructure representing a "Webster"
 data Webster = Webster
   { name :: Text
   } deriving (Eq, Show, Generic)
 
+
+-- Tell the compiler that he's free to implement the JSON encoding and
+-- decoding of "Webster" in whatever way it wants
 instance ToJSON Webster
 instance FromJSON Webster
 ```
 
+???
+
+* There are three components:
+  - [interface](https://github.com/nmattia/webzuri-fully-functional-webapp/tree/master/interface),
+    which specifies the types used by both the backend and the frontend, and of
+    course the
+  - [backend](https://github.com/nmattia/webzuri-fully-functional-webapp/tree/master/backend) and the
+  - [frontend](https://github.com/nmattia/webzuri-fully-functional-webapp/tree/master/frontend)
+
+* Type: information that you share with the compiler
+  - Used in Go, Java, Rust, C
+  - In its most basic form, prevents mixing incompatible structures
+
+* In Haskell, the compiler can do much more with that information, like
+  specifying an API with [servant](https://github.com/haskell-servant/servant).
+  This is not a native ability but is encoded in a library.
+
+* Haskell "Datatype" (like `Webster`) is basically a Java "class" or a Go
+  "struct".
+
+* JSON deriving: performed by [aeson](https://github.com/bos/aeson/), also a
+  library
 ---
 
 ## A Fully Functional Webapp - Serving an API 1/2
@@ -126,9 +173,10 @@ main = do
 
 ???
 
-* Main read arg
-* Main create empty (list) ref
-* Boot webapp
+* Very imperative so far: we'll use the server to serve the frontend code as
+  well. We take the path to the frontend assets as an argument, then we create a
+  mutable reference containing an empty list (of websters).
+* Then we run `webstersApp` (on port 8081)
 
 ---
 
@@ -144,6 +192,8 @@ type WebstersAPI =
 ``` haskell
 -- backend/Main.hs
 
+type MyApi = WebstersAPI :<|> Raw
+
 -- ┌ Function name       Function return type ┐
 -- │                                          │
 -- │           ┌ Function arguments types     │
@@ -154,7 +204,7 @@ webstersApp :: IORef [Webster] -> FilePath -> Application
 --          │        │                     Serve the assets ┐
 webstersApp websters path = --                       ┌──────┴──────────┐
     serve (Proxy :: Proxy MyApi) (serveWebsters :<|> serveDirectory path)
-  where -- local definitions
+  where
     serveWebsters = webstersGet :<|> webstersPost
     webstersGet = liftIO $ readIORef websters -- GET /websters
     webstersPost newWebster = liftIO $ do -- POST /websters
@@ -162,10 +212,236 @@ webstersApp websters path = --                       ┌──────┴─
       readIORef websters  --          └ Insert in list
 ```
 
+???
+
+* Something you've seen a thousand times: a function signature, and a function
+  body. Note that we can define mini-functions below the `where` keyword.
+
+* First `webstersGet`: our API type specifies that it should return a list of
+  `Webster`s. So we simply read the reference. Haskell, like Ruby or Python, is
+  expression based: no need for `return` or the like.
+
+* Then the `webstersPost` handler: The API specifies that the request body will
+  contain one new webster, so we add it to the list of websters we already have
+  in the mutable reference. The API also specifies that a list of websters must
+  be returned: we read the reference. Done.
+
+* We combine those two handlers together, alongside `serveDirectory`, which
+  serves everything at the path we read from the command line (our frontend
+  assets).
+
+* Note the weird `Proxy` thing: this is a dummy type that only contains type
+  information so that we can tell `serve` what API we actually want to serve.
 ---
 
+## A Fully Functional Webapp - FRP frontend 1/2
+
+``` haskell
+webstersWidget :: forall t m. (MonadWidget t m, Reflex t) => m ()
+webstersWidget = do
+--
+--  Attach a button to trigger a GET ─┐
+--                        ────────────┴───────────────
+    webstersGetTrigger <- webstersGet =<< button "refresh"
+
+    newWebsterInput <- textInput def -- ─────┐
+--                                Same with a text input for POST
+    webstersPostTrigger <- webstersPost -- ─────┴┐
+      ((Right . Webster) <$> _textInput_value newWebsterInput)
+      (keypress Enter t)
+
+    websters <- holdDyn [] $ fmapMaybe reqSuccess $ leftmost
+      [ webstersGetTrigger --  Define "websters", our list of "Webster"s,
+      , webstersPostTrigger -- which is the latest result from either a
+      ] --                     GET or a POST
+
+    -- Basically a for-each
+    void $ simpleList websters $ \webster ->
+      el "p" $ dynText (name <$> webster)
+  where
+    webstersGet :<|> webstersPost = client -- ┐
+      (Proxy :: Proxy WebstersAPI) -- ────────┤
+      (Proxy :: Proxy m) --  Function that derives query functions
+      (Proxy :: Proxy ()) --       (statically, at compile time)
+      (constDyn (BasePath "/"))
+```
+
+???
+
+* Two functions are generated for us by `client`: `webstersGet` and
+  `webstersPost`. They are basically callbacks the perform the requests for us.
+  The former returns a list of websters, while the latter takes new webster and
+  uploads it to the server (and returns the new list of websters).
+
+* We register two triggers:
+  - `webstersGetTrigger` (attached to a button) which performs a "GET" request.
+  - `webstersPostTrigger` (attached to a text input) which performs a "POST"
+    request.
+  Note that the types must match: a button (that carry no information besides
+  "I was clicked") to trigger a GET, and a text input (that we read as the
+  webster's name) for the POST. Otherwise the compiler would complain.
+
+* We bind the `websters` widget to whichever list of websters was updated last.
+
+* For each `webster` in `websters` we create a text element.
+
+---
+
+## A Fully Functional Webapp - FRP frontend 2/2
+
+``` haskell
+main :: IO ()
+main = mainWidget webstersWidget
+```
+
+???
+
+That's all. Really. No json encoding/decoding. No specifying the URL. All that
+is derived from the `WebstersAPI` type.
+---
+## A Fully Functional Webapp - Build and Deploy with Nix
+
+* Nix is a purely functional package manager
+* A Big (Turing complete) Json File
+
+``` nix
+{
+  x = 123;
+  text = "Hello";
+  y = f { bla = 456; };
+}
+```
+* Everything is immutable (written to read-only `/nix/store`)
+
+``` shell
+$ ls /nix/store | grep nodejs
+7id2b12px852x213zfq9dskmkcyss33z-nodejs-4.4.6
+gf5hf3mmz840dkldpajv1f4hyp6w1jv3-nodejs-6.9.5
+mbanw5y2pg5hz6rvvdfpdcl81y7b6qc4-nodejs-slim-6.9.5
+mrbqf0k3i060gkfl1j0l5phshkjgwrjw-nodejs-slim-6.9.5
+pri4d48v6jzk1zb27daw91lpn3zf7v2n-nodejs-6.9.5
+yh5nnld1fk56xsmirkkm6aw4xbz150f2-nodejs-6.11.1
+z5prbgja9fkzs35bpkak5d5n67zzlc7z-nodejs-6.9.1
+```
+
+???
+
+* Nix is a full-blown programming language. Read more about it
+  [here](https://nixos.org/nix/) or read a [quick
+  tutorial](https://medium.com/@MrJamesFisher/nix-by-example-a0063a1a4c55).
+
+* However it really shines when it comes to package (and dependency)
+  management.
+
+* Works on Linux, MacOS, probably more. All the dependencies (and outputs) are
+  stored in a flat directory, the `/nix/store`, so it is distribution agnostic.
+
+* An entry in the store is immutable and tagged with a hash. The hash depends
+  on _all_ the build inputs (scripts you used to build, etc). If a single build
+  input changes, you get a new hash, and a new entry in the store.
+
+* The whole set of nix packages is a big nix program. It is plain text,
+  described in a [repo](https://github.com/NixOS/nixpkgs) on GitHub. It 
+
+---
+## A Fully Functional Webapp - Build and Deploy with Nix
+
+* Programmatically describe build
+``` shell
+  frontend = ghcjsWithInterface.callPackage ./frontend/default.nix { };
+  backend = ghcWithInterface.callPackage ./backend/default.nix { } ;
+  server-exe = pkgs.writeScript "server"
+      ''
+      #!/usr/bin/env bash
+
+      ${backend}/bin/wzuri-backend ${frontend}/bin/wzuri-frontend.jsexe
+      '';
+```
+
+* Expand store paths
+
+``` shell
+$ cat $(nix-build -A server-exe)
+#!/usr/bin/env bash
+
+/nix/store/e8../bin/wzuri-backend /nix/store/31../bin/wzuri-frontend.jsexe
+```
+
+???
+
+* The whole build process for the webzuri webapp is described using nix,
+  relying on the various nix packages (libraries, really). Here I define an
+  extra step that takes the build outputs of the frontend and backend and
+  combine them together in a nifty script.
+
+---
+
+## Starting easy - One function at a time
+
+* Reuse your code written in Java, R, C, ...
+
+``` haskell
+C.include "<stdio.h>"
+
+readAndSum :: CInt -> IO CInt
+readAndSum n  = [C.block| int
+  {
+    int i, sum = 0, tmp;
+    for (i = 0; i < $(int n); i++) {
+      scanf("%d", &tmp);
+      sum += tmp;
+    }
+    return sum;
+  } |]
+
+main :: IO ()
+main = withJVM [] $ do
+    x <- readAndSum 5
+    message <- reflect ("Result from C: " <> pack (show x))
+    [java|
+      {
+        javax.swing.JOptionPane.showMessageDialog(null, $message);
+      }
+    |]
+```
+
+???
+
+* There are many ways you can go about starting with functional programming.
+  Some languages like Scala mix both imperative and functional programming. With
+  Haskell as well you can start slowly: write imperative code, but in a
+  functional language. Super easy!
+
+* Or even better, reuse you own imperative language libraries by calling them
+  from Haskell, using [inline-java](https://github.com/tweag/inline-java),
+  [inline-c](https://github.com/fpco/inline-c),
+  [inline-r](https://tweag.github.io/HaskellR/)...
+
+---
+
+## Starting easy - Build the WebZuri webapp!
+
+
+* `$ curl https://nixos.org/nix/install | sh`
+* clone [nmattia/webzuri-fully-functional-webapp](https://github.com/nmattia/webzuri-fully-functional-webapp)
+* `$(nix-build -A serve-slides)`
+
+``` shell
+ python = pkgs.python35.withPackages (ps: [ ps.httpserver ]);
+ serve-slides = pkgs.writeScript "slides"
+     ''
+     #!/usr/bin/env bash
+     cd ${./slides}
+     ${python}/bin/python -m http.server
+     '';
+```
+
+* If it doesn't build, beer is on me
+
+
+
     </textarea>
-    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    <script src="remark.min.js">
     </script>
     <script>
       var slideshow = remark.create(
