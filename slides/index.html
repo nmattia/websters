@@ -1103,7 +1103,8 @@ main = withJVM [] $ do
 
 * `$ curl https://nixos.org/nix/install | sh`
 * clone [nmattia/webzuri-fully-functional-webapp](https://github.com/nmattia/webzuri-fully-functional-webapp)
-* `$(nix-build -A serve-slides)`
+* `$(nix-build -A server-exe)` for the webapp
+* `$(nix-build -A serve-slides)` for serving the slides
 
 ``` shell
  python = pkgs.python35.withPackages (ps: [ ps.httpserver ]);
