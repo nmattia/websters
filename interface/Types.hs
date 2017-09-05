@@ -12,7 +12,7 @@ import Servant.API
 type WebstersAPI =
   -- GET /websters
   -- returns a list of "Webster"s
-  "websters" :> Get '[JSON] [Webster] :<|>
+  "websters"                            :> Get '[JSON] [Webster] :<|>
   -- POST /websters
   -- inserts a "Webster" and returns a list of "Webster"s
   "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
@@ -23,7 +23,7 @@ data Webster = Webster
   } deriving (Eq, Show, Generic)
 
 
--- Tell the compiler that he's free to implement the JSON encoding and
+-- Tell the compiler that it's free to implement the JSON encoding and
 -- decoding of "Webster" in whatever way it wants
 instance ToJSON Webster
 instance FromJSON Webster

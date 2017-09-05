@@ -29,6 +29,7 @@ class: center, middle
 # A Fully Functional Webapp
 ## WebZuri, 5th of September 2017
 ## Nicolas Mattia
+### Tweag I/O
 
 ---
 
@@ -44,16 +45,16 @@ class: center, middle
   - Build and Deploy with Nix
 1. Starting easy
   - One function at a time
-  - Read the doc
+  - Build the WebZuri webapp!
 ---
 
-## Introduction - Functional Programming 1/2
+## Introduction - Functional Programming
 
 ![Functional Programming word cloud](./wordcloud.png)
 
 ---
 
-## Introduction - Functional Programming 1/2
+## Introduction - Functional Programming
 
 * What's that FP thing?
   - Computation => mathematical function evaluation, mapping input to output
@@ -71,7 +72,8 @@ class: center, middle
 ???
 
 * https://en.wikipedia.org/wiki/Functional_programming
-* https://en.wikipedia.org/wiki/Lambda_calculus
+* https://en.wikipedia.org/wiki/Lambda_calculus (yes, that's where the "lamdba"
+  in "lamdba function" comes from)
 
 ---
 
@@ -106,7 +108,7 @@ class: center, middle
 type WebstersAPI =
   -- GET /websters
   -- returns a list of "Webster"s
-  "websters" :> Get '[JSON] [Webster] :<|>
+  "websters"                            :> Get '[JSON] [Webster] :<|>
   -- POST /websters
   -- inserts a "Webster" and returns a list of "Webster"s
   "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
@@ -117,13 +119,15 @@ data Webster = Webster
   } deriving (Eq, Show, Generic)
 
 
--- Tell the compiler that he's free to implement the JSON encoding and
+-- Tell the compiler that it's free to implement the JSON encoding and
 -- decoding of "Webster" in whatever way it wants
 instance ToJSON Webster
 instance FromJSON Webster
 ```
 
 ???
+
+* Comments start with `--`, much like SQL
 
 * There are three components:
   - [interface](https://github.com/nmattia/webzuri-fully-functional-webapp/tree/master/interface),
@@ -147,18 +151,168 @@ instance FromJSON Webster
   library
 ---
 
-## A Fully Functional Webapp - Serving an API 1/2
+## A Fully Functional Webapp - API as Types
 
 ``` haskell
 -- interface/Types.hs
 type WebstersAPI =
-  "websters" :> Get '[JSON] [Webster] :<|>
+  -- GET /websters
+  -- returns a list of "Webster"s
+  "websters"                            :> Get '[JSON] [Webster] :<|>
+  -- POST /websters
+  -- inserts a "Webster" and returns a list of "Webster"s
+  "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
+
+*-- | The datastructure representing a "Webster"
+*data Webster = Webster
+* { name :: Text
+* } deriving (Eq, Show, Generic)
+
+
+-- Tell the compiler that it's free to implement the JSON encoding and
+-- decoding of "Webster" in whatever way it wants
+instance ToJSON Webster
+instance FromJSON Webster
+```
+
+???
+
+* Comments start with `--`, much like SQL
+
+* There are three components:
+  - [interface](https://github.com/nmattia/webzuri-fully-functional-webapp/tree/master/interface),
+    which specifies the types used by both the backend and the frontend, and of
+    course the
+  - [backend](https://github.com/nmattia/webzuri-fully-functional-webapp/tree/master/backend) and the
+  - [frontend](https://github.com/nmattia/webzuri-fully-functional-webapp/tree/master/frontend)
+
+* Type: information that you share with the compiler
+  - Used in Go, Java, Rust, C
+  - In its most basic form, prevents mixing incompatible structures
+
+* In Haskell, the compiler can do much more with that information, like
+  specifying an API with [servant](https://github.com/haskell-servant/servant).
+  This is not a native ability but is encoded in a library.
+
+* Haskell "Datatype" (like `Webster`) is basically a Java "class" or a Go
+  "struct".
+
+* JSON deriving: performed by [aeson](https://github.com/bos/aeson/), also a
+  library
+---
+
+## A Fully Functional Webapp - API as Types
+
+``` haskell
+-- interface/Types.hs
+type WebstersAPI =
+  -- GET /websters
+  -- returns a list of "Webster"s
+* "websters"                            :> Get '[JSON] [Webster] :<|>
+  -- POST /websters
+  -- inserts a "Webster" and returns a list of "Webster"s
+* "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
+
+-- | The datastructure representing a "Webster"
+data Webster = Webster
+  { name :: Text
+  } deriving (Eq, Show, Generic)
+
+
+-- Tell the compiler that it's free to implement the JSON encoding and
+-- decoding of "Webster" in whatever way it wants
+instance ToJSON Webster
+instance FromJSON Webster
+```
+
+???
+
+* Comments start with `--`, much like SQL
+
+* There are three components:
+  - [interface](https://github.com/nmattia/webzuri-fully-functional-webapp/tree/master/interface),
+    which specifies the types used by both the backend and the frontend, and of
+    course the
+  - [backend](https://github.com/nmattia/webzuri-fully-functional-webapp/tree/master/backend) and the
+  - [frontend](https://github.com/nmattia/webzuri-fully-functional-webapp/tree/master/frontend)
+
+* Type: information that you share with the compiler
+  - Used in Go, Java, Rust, C
+  - In its most basic form, prevents mixing incompatible structures
+
+* In Haskell, the compiler can do much more with that information, like
+  specifying an API with [servant](https://github.com/haskell-servant/servant).
+  This is not a native ability but is encoded in a library.
+
+* Haskell "Datatype" (like `Webster`) is basically a Java "class" or a Go
+  "struct".
+
+* JSON deriving: performed by [aeson](https://github.com/bos/aeson/), also a
+  library
+---
+
+## A Fully Functional Webapp - API as Types
+
+``` haskell
+-- interface/Types.hs
+type WebstersAPI =
+  -- GET /websters
+  -- returns a list of "Webster"s
+  "websters"                            :> Get '[JSON] [Webster] :<|>
+  -- POST /websters
+  -- inserts a "Webster" and returns a list of "Webster"s
+  "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
+
+-- | The datastructure representing a "Webster"
+data Webster = Webster
+  { name :: Text
+  } deriving (Eq, Show, Generic)
+
+
+-- Tell the compiler that it's free to implement the JSON encoding and
+-- decoding of "Webster" in whatever way it wants
+*instance ToJSON Webster
+*instance FromJSON Webster
+```
+
+???
+
+* Comments start with `--`, much like SQL
+
+* There are three components:
+  - [interface](https://github.com/nmattia/webzuri-fully-functional-webapp/tree/master/interface),
+    which specifies the types used by both the backend and the frontend, and of
+    course the
+  - [backend](https://github.com/nmattia/webzuri-fully-functional-webapp/tree/master/backend) and the
+  - [frontend](https://github.com/nmattia/webzuri-fully-functional-webapp/tree/master/frontend)
+
+* Type: information that you share with the compiler
+  - Used in Go, Java, Rust, C
+  - In its most basic form, prevents mixing incompatible structures
+
+* In Haskell, the compiler can do much more with that information, like
+  specifying an API with [servant](https://github.com/haskell-servant/servant).
+  This is not a native ability but is encoded in a library.
+
+* Haskell "Datatype" (like `Webster`) is basically a Java "class" or a Go
+  "struct".
+
+* JSON deriving: performed by [aeson](https://github.com/bos/aeson/), also a
+  library
+---
+
+## A Fully Functional Webapp - Serving an API
+
+``` haskell
+-- interface/Types.hs
+type WebstersAPI =
+  "websters"                            :> Get '[JSON] [Webster] :<|>
   "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
 ```
 
 ``` haskell
 -- backend/Main.hs
-main :: IO ()
+
 -- Function body
 main = do
   -- read CLI arguments
@@ -179,13 +333,109 @@ main = do
 * Then we run `webstersApp` (on port 8081)
 
 ---
-
-## A Fully Functional Webapp - Serving an API 2/2
+## A Fully Functional Webapp - Serving an API
 
 ``` haskell
 -- interface/Types.hs
 type WebstersAPI =
-  "websters" :> Get '[JSON] [Webster] :<|>
+  "websters"                            :> Get '[JSON] [Webster] :<|>
+  "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
+```
+
+``` haskell
+-- backend/Main.hs
+
+-- Function body
+main = do
+  -- read CLI arguments
+* [webappPath] <- getArgs
+
+  -- create a reference containing an empty list ([])
+  websters <- newIORef []
+
+  -- run our webapp "webstersApp" (see next slide)
+  run 8081 (webstersApp websters webappPath)
+```
+
+???
+
+* Very imperative so far: we'll use the server to serve the frontend code as
+  well. We take the path to the frontend assets as an argument, then we create a
+  mutable reference containing an empty list (of websters).
+* Then we run `webstersApp` (on port 8081)
+
+---
+## A Fully Functional Webapp - Serving an API
+
+``` haskell
+-- interface/Types.hs
+type WebstersAPI =
+  "websters"                            :> Get '[JSON] [Webster] :<|>
+  "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
+```
+
+``` haskell
+-- backend/Main.hs
+
+-- Function body
+main = do
+  -- read CLI arguments
+  [webappPath] <- getArgs
+
+  -- create a reference containing an empty list ([])
+* websters <- newIORef []
+
+  -- run our webapp "webstersApp" (see next slide)
+  run 8081 (webstersApp websters webappPath)
+```
+
+???
+
+* Very imperative so far: we'll use the server to serve the frontend code as
+  well. We take the path to the frontend assets as an argument, then we create a
+  mutable reference containing an empty list (of websters).
+* Then we run `webstersApp` (on port 8081)
+
+---
+## A Fully Functional Webapp - Serving an API
+
+``` haskell
+-- interface/Types.hs
+type WebstersAPI =
+  "websters"                            :> Get '[JSON] [Webster] :<|>
+  "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
+```
+
+``` haskell
+-- backend/Main.hs
+
+-- Function body
+main = do
+  -- read CLI arguments
+  [webappPath] <- getArgs
+
+  -- create a reference containing an empty list ([])
+  websters <- newIORef []
+
+  -- run our webapp "webstersApp" (see next slide)
+* run 8081 (webstersApp websters webappPath)
+```
+
+???
+
+* Very imperative so far: we'll use the server to serve the frontend code as
+  well. We take the path to the frontend assets as an argument, then we create a
+  mutable reference containing an empty list (of websters).
+* Then we run `webstersApp` (on port 8081)
+
+---
+
+## A Fully Functional Webapp - Serving an API
+
+``` haskell
+-- interface/Types.hs
+type WebstersAPI =
+  "websters"                            :> Get '[JSON] [Webster] :<|>
   "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
 ```
 
@@ -194,19 +444,17 @@ type WebstersAPI =
 
 type MyApi = WebstersAPI :<|> Raw
 
--- ┌ Function name       Function return type ┐
--- │                                          │
--- │           ┌ Function arguments types     │
--- │           │                  │           │
-webstersApp :: IORef [Webster] -> FilePath -> Application
---
 --          ┌────────┬ Function arguments
 --          │        │                     Serve the assets ┐
 webstersApp websters path = --                       ┌──────┴──────────┐
     serve (Proxy :: Proxy MyApi) (serveWebsters :<|> serveDirectory path)
+
   where
+
     serveWebsters = webstersGet :<|> webstersPost
+
     webstersGet = liftIO $ readIORef websters -- GET /websters
+
     webstersPost newWebster = liftIO $ do -- POST /websters
       modifyIORef websters (newWebster:)
       readIORef websters  --          └ Insert in list
@@ -218,7 +466,7 @@ webstersApp websters path = --                       ┌──────┴─
   body. Note that we can define mini-functions below the `where` keyword.
 
 * First `webstersGet`: our API type specifies that it should return a list of
-  `Webster`s. So we simply read the reference. Haskell, like Ruby or Python, is
+  `Webster`s. So we simply read the reference. Haskell, like Ruby, is
   expression based: no need for `return` or the like.
 
 * Then the `webstersPost` handler: The API specifies that the request body will
@@ -226,18 +474,242 @@ webstersApp websters path = --                       ┌──────┴─
   in the mutable reference. The API also specifies that a list of websters must
   be returned: we read the reference. Done.
 
+* In both functions above, the compiler would complain if we forgot to use the
+  argument or returned an object of incorrect type. Note that all the JSON
+  encoding/decoding is handled for us, derived from the API.
+
 * We combine those two handlers together, alongside `serveDirectory`, which
   serves everything at the path we read from the command line (our frontend
   assets).
 
-* Note the weird `Proxy` thing: this is a dummy type that only contains type
+* Note the weird `Proxy` thing: this is a dummy value that only contains type
+  information so that we can tell `serve` what API we actually want to serve.
+---
+## A Fully Functional Webapp - Serving an API
+
+``` haskell
+-- interface/Types.hs
+type WebstersAPI =
+  "websters"                            :> Get '[JSON] [Webster] :<|>
+  "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
+```
+
+``` haskell
+-- backend/Main.hs
+
+type MyApi = WebstersAPI :<|> `Raw`
+
+--          ┌────────┬ Function arguments
+--          │        │                     Serve the assets ┐
+webstersApp websters `path` = --                       ┌──────┴──────────┐
+    serve (Proxy :: Proxy MyApi) (serveWebsters :<|> `serveDirectory path`)
+
+  where
+
+    serveWebsters = webstersGet :<|> webstersPost
+
+    webstersGet = liftIO $ readIORef websters -- GET /websters
+
+    webstersPost newWebster = liftIO $ do -- POST /websters
+      modifyIORef websters (newWebster:)
+      readIORef websters  --          └ Insert in list
+```
+
+???
+
+* Something you've seen a thousand times: a function signature, and a function
+  body. Note that we can define mini-functions below the `where` keyword.
+
+* First `webstersGet`: our API type specifies that it should return a list of
+  `Webster`s. So we simply read the reference. Haskell, like Ruby, is
+  expression based: no need for `return` or the like.
+
+* Then the `webstersPost` handler: The API specifies that the request body will
+  contain one new webster, so we add it to the list of websters we already have
+  in the mutable reference. The API also specifies that a list of websters must
+  be returned: we read the reference. Done.
+
+* In both functions above, the compiler would complain if we forgot to use the
+  argument or returned an object of incorrect type. Note that all the JSON
+  encoding/decoding is handled for us, derived from the API.
+
+* We combine those two handlers together, alongside `serveDirectory`, which
+  serves everything at the path we read from the command line (our frontend
+  assets).
+
+* Note the weird `Proxy` thing: this is a dummy value that only contains type
+  information so that we can tell `serve` what API we actually want to serve.
+---
+## A Fully Functional Webapp - Serving an API
+
+``` haskell
+-- interface/Types.hs
+type WebstersAPI =
+  "websters"                            :> Get '[JSON] [Webster] :<|>
+  "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
+```
+
+``` haskell
+-- backend/Main.hs
+
+type MyApi = `WebstersAPI` :<|> Raw
+
+--          ┌────────┬ Function arguments
+--          │        │                     Serve the assets ┐
+webstersApp websters path = --                       ┌──────┴──────────┐
+    serve (Proxy :: Proxy MyApi) (`serveWebsters` :<|> serveDirectory path)
+
+  where
+
+*   serveWebsters = webstersGet :<|> webstersPost
+
+    webstersGet = liftIO $ readIORef websters -- GET /websters
+
+    webstersPost newWebster = liftIO $ do -- POST /websters
+      modifyIORef websters (newWebster:)
+      readIORef websters  --          └ Insert in list
+```
+
+???
+
+* Something you've seen a thousand times: a function signature, and a function
+  body. Note that we can define mini-functions below the `where` keyword.
+
+* First `webstersGet`: our API type specifies that it should return a list of
+  `Webster`s. So we simply read the reference. Haskell, like Ruby, is
+  expression based: no need for `return` or the like.
+
+* Then the `webstersPost` handler: The API specifies that the request body will
+  contain one new webster, so we add it to the list of websters we already have
+  in the mutable reference. The API also specifies that a list of websters must
+  be returned: we read the reference. Done.
+
+* In both functions above, the compiler would complain if we forgot to use the
+  argument or returned an object of incorrect type. Note that all the JSON
+  encoding/decoding is handled for us, derived from the API.
+
+* We combine those two handlers together, alongside `serveDirectory`, which
+  serves everything at the path we read from the command line (our frontend
+  assets).
+
+* Note the weird `Proxy` thing: this is a dummy value that only contains type
+  information so that we can tell `serve` what API we actually want to serve.
+---
+## A Fully Functional Webapp - Serving an API
+
+``` haskell
+-- interface/Types.hs
+type WebstersAPI =
+  `"websters"                            :> Get '[JSON] [Webster]` :<|>
+  "websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]
+```
+
+``` haskell
+-- backend/Main.hs
+
+type MyApi = WebstersAPI :<|> Raw
+
+--          ┌────────┬ Function arguments
+--          │        │                     Serve the assets ┐
+webstersApp websters path = --                       ┌──────┴──────────┐
+    serve (Proxy :: Proxy MyApi) (serveWebsters :<|> serveDirectory path)
+
+  where
+
+    serveWebsters = webstersGet :<|> webstersPost
+
+*   webstersGet = liftIO $ readIORef websters -- GET /websters
+
+    webstersPost newWebster = liftIO $ do -- POST /websters
+      modifyIORef websters (newWebster:)
+      readIORef websters  --          └ Insert in list
+```
+
+???
+
+* Something you've seen a thousand times: a function signature, and a function
+  body. Note that we can define mini-functions below the `where` keyword.
+
+* First `webstersGet`: our API type specifies that it should return a list of
+  `Webster`s. So we simply read the reference. Haskell, like Ruby, is
+  expression based: no need for `return` or the like.
+
+* Then the `webstersPost` handler: The API specifies that the request body will
+  contain one new webster, so we add it to the list of websters we already have
+  in the mutable reference. The API also specifies that a list of websters must
+  be returned: we read the reference. Done.
+
+* In both functions above, the compiler would complain if we forgot to use the
+  argument or returned an object of incorrect type. Note that all the JSON
+  encoding/decoding is handled for us, derived from the API.
+
+* We combine those two handlers together, alongside `serveDirectory`, which
+  serves everything at the path we read from the command line (our frontend
+  assets).
+
+* Note the weird `Proxy` thing: this is a dummy value that only contains type
+  information so that we can tell `serve` what API we actually want to serve.
+---
+## A Fully Functional Webapp - Serving an API
+
+``` haskell
+-- interface/Types.hs
+type WebstersAPI =
+  "websters"                            :> Get '[JSON] [Webster] :<|>
+  `"websters" :> ReqBody '[JSON] Webster :> Post '[JSON] [Webster]`
+```
+
+``` haskell
+-- backend/Main.hs
+
+type MyApi = WebstersAPI :<|> Raw
+
+--          ┌────────┬ Function arguments
+--          │        │                     Serve the assets ┐
+webstersApp websters path = --                       ┌──────┴──────────┐
+    serve (Proxy :: Proxy MyApi) (serveWebsters :<|> serveDirectory path)
+
+  where
+
+    serveWebsters = webstersGet :<|> webstersPost
+
+    webstersGet = liftIO $ readIORef websters -- GET /websters
+
+*   webstersPost newWebster = liftIO $ do -- POST /websters
+*     modifyIORef websters (newWebster:)
+*     readIORef websters  --          └ Insert in list
+```
+
+???
+
+* Something you've seen a thousand times: a function signature, and a function
+  body. Note that we can define mini-functions below the `where` keyword.
+
+* First `webstersGet`: our API type specifies that it should return a list of
+  `Webster`s. So we simply read the reference. Haskell, like Ruby, is
+  expression based: no need for `return` or the like.
+
+* Then the `webstersPost` handler: The API specifies that the request body will
+  contain one new webster, so we add it to the list of websters we already have
+  in the mutable reference. The API also specifies that a list of websters must
+  be returned: we read the reference. Done.
+
+* In both functions above, the compiler would complain if we forgot to use the
+  argument or returned an object of incorrect type. Note that all the JSON
+  encoding/decoding is handled for us, derived from the API.
+
+* We combine those two handlers together, alongside `serveDirectory`, which
+  serves everything at the path we read from the command line (our frontend
+  assets).
+
+* Note the weird `Proxy` thing: this is a dummy value that only contains type
   information so that we can tell `serve` what API we actually want to serve.
 ---
 
-## A Fully Functional Webapp - FRP frontend 1/2
+## A Fully Functional Webapp - FRP frontend
 
 ``` haskell
-webstersWidget :: forall t m. (MonadWidget t m, Reflex t) => m ()
+main = mainWidget webstersWidget
 webstersWidget = do
 --
 --  Attach a button to trigger a GET ─┐
@@ -259,11 +731,10 @@ webstersWidget = do
     void $ simpleList websters $ \webster ->
       el "p" $ dynText (name <$> webster)
   where
-    webstersGet :<|> webstersPost = client -- ┐
-      (Proxy :: Proxy WebstersAPI) -- ────────┤
-      (Proxy :: Proxy m) --  Function that derives query functions
-      (Proxy :: Proxy ()) --       (statically, at compile time)
-      (constDyn (BasePath "/"))
+    webstersGet :<|> webstersPost = client (Proxy :: Proxy WebstersAPI)
+--                                     │
+--    ...                    Function that derives query functions
+--                                 (statically, at compile time)
 ```
 
 ???
@@ -285,20 +756,227 @@ webstersWidget = do
 
 * For each `webster` in `websters` we create a text element.
 
----
+* That's all. Really. No json encoding/decoding. No specifying the URL. All
+  that is derived from the `WebstersAPI` type.
 
-## A Fully Functional Webapp - FRP frontend 2/2
+---
+## A Fully Functional Webapp - FRP frontend
 
 ``` haskell
-main :: IO ()
 main = mainWidget webstersWidget
+webstersWidget = do
+--
+--  Attach a button to trigger a GET ─┐
+--                        ────────────┴───────────────
+    webstersGetTrigger <- `webstersGet` =<< button "refresh"
+
+    newWebsterInput <- textInput def -- ─────┐
+--                                Same with a text input for POST
+    webstersPostTrigger <- `webstersPost` -- ─────┴┐
+      ((Right . Webster) <$> _textInput_value newWebsterInput)
+      (keypress Enter t)
+
+    websters <- holdDyn [] $ fmapMaybe reqSuccess $ leftmost
+      [ webstersGetTrigger --  Define "websters", our list of "Webster"s,
+      , webstersPostTrigger -- which is the latest result from either a
+      ] --                     GET or a POST
+
+    -- Basically a for-each
+    void $ simpleList websters $ \webster ->
+      el "p" $ dynText (name <$> webster)
+  where
+*   webstersGet :<|> webstersPost = client (Proxy :: Proxy WebstersAPI)
+--                                     │
+--    ...                    Function that derives query functions
+--                                 (statically, at compile time)
 ```
 
 ???
 
-That's all. Really. No json encoding/decoding. No specifying the URL. All that
-is derived from the `WebstersAPI` type.
+* Two functions are generated for us by `client`: `webstersGet` and
+  `webstersPost`. They are basically callbacks the perform the requests for us.
+  The former returns a list of websters, while the latter takes new webster and
+  uploads it to the server (and returns the new list of websters).
+
+* We register two triggers:
+  - `webstersGetTrigger` (attached to a button) which performs a "GET" request.
+  - `webstersPostTrigger` (attached to a text input) which performs a "POST"
+    request.
+  Note that the types must match: a button (that carry no information besides
+  "I was clicked") to trigger a GET, and a text input (that we read as the
+  webster's name) for the POST. Otherwise the compiler would complain.
+
+* We bind the `websters` widget to whichever list of websters was updated last.
+
+* For each `webster` in `websters` we create a text element.
+
+* That's all. Really. No json encoding/decoding. No specifying the URL. All
+  that is derived from the `WebstersAPI` type.
+
 ---
+## A Fully Functional Webapp - FRP frontend
+
+``` haskell
+main = mainWidget webstersWidget
+webstersWidget = do
+--
+--  Attach a button to trigger a GET ─┐
+--                        ────────────┴───────────────
+*   webstersGetTrigger <- webstersGet =<< button "refresh"
+
+    newWebsterInput <- textInput def -- ─────┐
+--                                Same with a text input for POST
+    webstersPostTrigger <- webstersPost -- ─────┴┐
+      ((Right . Webster) <$> _textInput_value newWebsterInput)
+      (keypress Enter t)
+
+    websters <- holdDyn [] $ fmapMaybe reqSuccess $ leftmost
+      [ webstersGetTrigger --  Define "websters", our list of "Webster"s,
+      , webstersPostTrigger -- which is the latest result from either a
+      ] --                     GET or a POST
+
+    -- Basically a for-each
+    void $ simpleList websters $ \webster ->
+      el "p" $ dynText (name <$> webster)
+  where
+    webstersGet :<|> webstersPost = client (Proxy :: Proxy WebstersAPI)
+--                                     │
+--    ...                    Function that derives query functions
+--                                 (statically, at compile time)
+```
+
+???
+
+* Two functions are generated for us by `client`: `webstersGet` and
+  `webstersPost`. They are basically callbacks the perform the requests for us.
+  The former returns a list of websters, while the latter takes new webster and
+  uploads it to the server (and returns the new list of websters).
+
+* We register two triggers:
+  - `webstersGetTrigger` (attached to a button) which performs a "GET" request.
+  - `webstersPostTrigger` (attached to a text input) which performs a "POST"
+    request.
+  Note that the types must match: a button (that carry no information besides
+  "I was clicked") to trigger a GET, and a text input (that we read as the
+  webster's name) for the POST. Otherwise the compiler would complain.
+
+* We bind the `websters` widget to whichever list of websters was updated last.
+
+* For each `webster` in `websters` we create a text element.
+
+* That's all. Really. No json encoding/decoding. No specifying the URL. All
+  that is derived from the `WebstersAPI` type.
+
+---
+## A Fully Functional Webapp - FRP frontend
+
+``` haskell
+main = mainWidget webstersWidget
+webstersWidget = do
+--
+--  Attach a button to trigger a GET ─┐
+--                        ────────────┴───────────────
+    webstersGetTrigger <- webstersGet =<< button "refresh"
+
+*   newWebsterInput <- textInput def -- ─────┐
+*--                                Same with a text input for POST
+*   webstersPostTrigger <- webstersPost -- ─────┴┐
+*     ((Right . Webster) <$> _textInput_value newWebsterInput)
+*     (keypress Enter t)
+
+    websters <- holdDyn [] $ fmapMaybe reqSuccess $ leftmost
+      [ webstersGetTrigger --  Define "websters", our list of "Webster"s,
+      , webstersPostTrigger -- which is the latest result from either a
+      ] --                     GET or a POST
+
+    -- Basically a for-each
+    void $ simpleList websters $ \webster ->
+      el "p" $ dynText (name <$> webster)
+  where
+    webstersGet :<|> webstersPost = client (Proxy :: Proxy WebstersAPI)
+--                                     │
+--    ...                    Function that derives query functions
+--                                 (statically, at compile time)
+```
+
+???
+
+* Two functions are generated for us by `client`: `webstersGet` and
+  `webstersPost`. They are basically callbacks the perform the requests for us.
+  The former returns a list of websters, while the latter takes new webster and
+  uploads it to the server (and returns the new list of websters).
+
+* We register two triggers:
+  - `webstersGetTrigger` (attached to a button) which performs a "GET" request.
+  - `webstersPostTrigger` (attached to a text input) which performs a "POST"
+    request.
+  Note that the types must match: a button (that carry no information besides
+  "I was clicked") to trigger a GET, and a text input (that we read as the
+  webster's name) for the POST. Otherwise the compiler would complain.
+
+* We bind the `websters` widget to whichever list of websters was updated last.
+
+* For each `webster` in `websters` we create a text element.
+
+* That's all. Really. No json encoding/decoding. No specifying the URL. All
+  that is derived from the `WebstersAPI` type.
+
+---
+## A Fully Functional Webapp - FRP frontend
+
+``` haskell
+main = mainWidget webstersWidget
+webstersWidget = do
+--
+--  Attach a button to trigger a GET ─┐
+--                        ────────────┴───────────────
+    webstersGetTrigger <- webstersGet =<< button "refresh"
+
+    newWebsterInput <- textInput def -- ─────┐
+--                                Same with a text input for POST
+    webstersPostTrigger <- webstersPost -- ─────┴┐
+      ((Right . Webster) <$> _textInput_value newWebsterInput)
+      (keypress Enter t)
+
+*   websters <- holdDyn [] $ fmapMaybe reqSuccess $ leftmost
+*     [ webstersGetTrigger --  Define "websters", our list of "Webster"s,
+*     , webstersPostTrigger -- which is the latest result from either a
+*     ] --                     GET or a POST
+
+*   -- Basically a for-each
+*   void $ simpleList websters $ \webster ->
+*     el "p" $ dynText (name <$> webster)
+  where
+    webstersGet :<|> webstersPost = client (Proxy :: Proxy WebstersAPI)
+--                                     │
+--    ...                    Function that derives query functions
+--                                 (statically, at compile time)
+```
+
+???
+
+* Two functions are generated for us by `client`: `webstersGet` and
+  `webstersPost`. They are basically callbacks the perform the requests for us.
+  The former returns a list of websters, while the latter takes new webster and
+  uploads it to the server (and returns the new list of websters).
+
+* We register two triggers:
+  - `webstersGetTrigger` (attached to a button) which performs a "GET" request.
+  - `webstersPostTrigger` (attached to a text input) which performs a "POST"
+    request.
+  Note that the types must match: a button (that carry no information besides
+  "I was clicked") to trigger a GET, and a text input (that we read as the
+  webster's name) for the POST. Otherwise the compiler would complain.
+
+* We bind the `websters` widget to whichever list of websters was updated last.
+
+* For each `webster` in `websters` we create a text element.
+
+* That's all. Really. No json encoding/decoding. No specifying the URL. All
+  that is derived from the `WebstersAPI` type.
+
+---
+
 ## A Fully Functional Webapp - Build and Deploy with Nix
 
 * Nix is a purely functional package manager
@@ -341,12 +1019,13 @@ z5prbgja9fkzs35bpkak5d5n67zzlc7z-nodejs-6.9.1
   input changes, you get a new hash, and a new entry in the store.
 
 * The whole set of nix packages is a big nix program. It is plain text,
-  described in a [repo](https://github.com/NixOS/nixpkgs) on GitHub. It 
+  described in a [repo](https://github.com/NixOS/nixpkgs) on GitHub.
 
 ---
 ## A Fully Functional Webapp - Build and Deploy with Nix
 
 * Programmatically describe build
+
 ``` shell
   frontend = ghcjsWithInterface.callPackage ./frontend/default.nix { };
   backend = ghcWithInterface.callPackage ./backend/default.nix { } ;
@@ -446,7 +1125,8 @@ main = withJVM [] $ do
     <script>
       var slideshow = remark.create(
         {
-          highlightLines: true
+          highlightLines: true,
+          highlightSpans: true
         });
     </script>
   </body>
