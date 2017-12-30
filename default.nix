@@ -33,12 +33,9 @@ let
       ${backend}/bin/wzuri-backend ${frontend}/bin/wzuri-frontend.jsexe
       '';
 
-  python = pkgs.python35.withPackages (ps: [ ps.httpserver ]);
   serve-slides = pkgs.writeScript "slides"
       ''
-      #!/usr/bin/env bash
-      cd ${./slides}
-      ${python}/bin/python -m http.server
+      ${pkgs.haskellPackages.wai-app-static}/bin/warp -d ${./slides}
       '';
 
 in { inherit frontend backend server-exe serve-slides; }
